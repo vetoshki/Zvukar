@@ -1,0 +1,1560 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Музыкальный тренажер нот</title>
+
+    <style>
+
+        body{
+            font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+            background-color:#eef2f7;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            height:100vh;
+            margin:0;
+            user-select:none;
+            overflow:hidden;
+        }
+
+        .quiz-container{
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            width:95%;
+            max-width:650px;
+            gap:35px;
+        }
+
+
+        /* =====================================================
+           БОКОВАЯ КНОПКА РЕЖИМА СЛУХА
+           ===================================================== */
+
+        .hearing-mode-btn{
+            position:fixed;
+            top:20px;
+            right:20px;
+
+            padding:11px 18px;
+
+            border:none;
+            border-radius:20px;
+
+            background:linear-gradient(
+                135deg,
+                #64748b 0%,
+                #475569 100%
+            );
+
+            color:#ffffff;
+
+            font-size:12px;
+            font-weight:800;
+
+            letter-spacing:0.8px;
+            text-transform:uppercase;
+
+            cursor:pointer;
+
+            box-shadow:
+                0 4px 14px rgba(71,85,105,0.3);
+
+            transition:
+                all 0.2s ease;
+
+            z-index:100;
+        }
+
+        .hearing-mode-btn:hover{
+            transform:translateY(-2px);
+
+            box-shadow:
+                0 7px 18px rgba(71,85,105,0.4);
+        }
+
+        .hearing-mode-btn:active{
+            transform:translateY(1px);
+        }
+
+
+        /* Активный режим */
+
+        .hearing-mode-btn.active{
+            background:linear-gradient(
+                135deg,
+                #0284c7 0%,
+                #0369a1 100%
+            );
+
+            box-shadow:
+                0 4px 18px rgba(2,132,199,0.45),
+                0 0 0 2px rgba(2,132,199,0.12);
+        }
+
+
+        /* =====================================================
+           ПАНЕЛЬ УПРАВЛЕНИЯ
+           ===================================================== */
+
+        .controls-panel{
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            gap:15px;
+
+            width:100%;
+            max-width:480px;
+
+            background:
+                linear-gradient(
+                    180deg,
+                    #ffffff 0%,
+                    #f1f5f9 100%
+                );
+
+            padding:16px;
+
+            border-radius:18px;
+
+            box-shadow:
+                0 10px 25px rgba(148,163,184,0.3),
+                inset 0 2px 0 #ffffff;
+
+            border:1px solid #cbd5e1;
+
+            position:relative;
+        }
+
+
+        .segmented-control{
+            display:flex;
+
+            background:#e2e8f0;
+
+            border-radius:12px;
+
+            padding:4px;
+
+            width:100%;
+
+            box-shadow:
+                inset 0 3px 6px rgba(0,0,0,0.08),
+                0 1px 0 #ffffff;
+        }
+
+
+        .segmented-control label{
+            flex:1;
+
+            text-align:center;
+
+            padding:11px 0;
+
+            font-size:14px;
+            font-weight:700;
+
+            color:#64748b;
+
+            cursor:pointer;
+
+            border-radius:9px;
+
+            transition:
+                all 0.15s cubic-bezier(0.4,0,0.2,1);
+        }
+
+
+        .segmented-control input[type="radio"]{
+            display:none;
+        }
+
+
+        .segmented-control label:has(input:checked){
+            background:
+                linear-gradient(
+                    180deg,
+                    #0284c7 0%,
+                    #0369a1 100%
+                );
+
+            color:#ffffff;
+
+            box-shadow:
+                0 4px 12px rgba(2,132,199,0.4),
+                inset 0 1px 0 rgba(255,255,255,0.3);
+
+            text-shadow:
+                0 1px 2px rgba(0,0,0,0.2);
+        }
+
+
+        .settings-row{
+            display:flex;
+
+            align-items:center;
+
+            gap:10px;
+
+            font-size:12px;
+
+            color:#475569;
+
+            font-weight:800;
+
+            letter-spacing:1px;
+
+            text-transform:uppercase;
+        }
+
+
+        .settings-row input[type="number"]{
+            width:55px;
+
+            padding:6px 8px;
+
+            font-size:16px;
+
+            font-weight:700;
+
+            color:#0f172a;
+
+            border:2px solid #cbd5e1;
+
+            border-radius:8px;
+
+            text-align:center;
+
+            outline:none;
+
+            background:#ffffff;
+
+            box-shadow:
+                inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+
+        .settings-row input:focus{
+            border-color:#0284c7;
+
+            box-shadow:
+                0 0 0 3px rgba(2,132,199,0.2);
+        }
+
+
+        /* =====================================================
+           КАРТОЧКА НОТЫ
+           ===================================================== */
+
+        .card-container{
+            position:relative;
+
+            width:209px;
+            height:184px;
+
+            background:#ffffff;
+
+            border-radius:20px;
+
+            box-shadow:
+                0 20px 40px rgba(100,116,139,0.3),
+                0 0 0 1px rgba(148,163,184,0.1);
+
+            display:flex;
+
+            justify-content:center;
+            align-items:center;
+
+            transition:
+                transform 0.2s ease;
+        }
+
+
+        .timer-svg{
+            position:absolute;
+
+            top:-4px;
+            left:-4px;
+
+            width:217px;
+            height:192px;
+
+            z-index:1;
+
+            pointer-events:none;
+        }
+
+
+        .timer-svg rx,
+        .timer-svg rect{
+            rx:20px;
+            ry:20px;
+        }
+
+
+        .timer-svg .bg-track{
+            fill:none;
+
+            stroke:#e2e8f0;
+
+            stroke-width:4;
+        }
+
+
+        .timer-svg .progress-wave{
+            fill:none;
+
+            stroke:#0284c7;
+
+            stroke-width:4;
+
+            stroke-dasharray:774;
+
+            stroke-dashoffset:0;
+
+            stroke-linecap:round;
+        }
+
+
+        .card-content{
+            width:205px;
+            height:180px;
+
+            border-radius:16px;
+
+            background:#ffffff;
+
+            display:flex;
+
+            justify-content:center;
+            align-items:center;
+
+            position:relative;
+
+            z-index:2;
+
+            overflow:hidden;
+
+            transition:
+                background 0.2s ease;
+        }
+
+
+        .note-image{
+            width:100%;
+            height:100%;
+
+            object-fit:cover;
+
+            object-position:left;
+
+            transition:
+                opacity 0.2s ease,
+                filter 0.2s ease;
+        }
+
+
+        /* =====================================================
+           РЕЖИМ СЛУХА
+           ===================================================== */
+
+        /*
+           В режиме слуха изображение полностью скрывается.
+           Карточка остаётся белой.
+        */
+
+        .hearing-mode .note-image{
+            opacity:0;
+
+            visibility:hidden;
+        }
+
+
+        /*
+           Дополнительная защита:
+           при включённом режиме слуха
+           содержимое карточки не даёт визуальной подсказки.
+        */
+
+        .hearing-mode .card-content{
+            background:#ffffff;
+        }
+
+
+        .status-text{
+            position:absolute;
+
+            width:100%;
+
+            text-align:center;
+
+            font-size:32px;
+
+            font-weight:900;
+
+            color:#ffffff;
+
+            display:none;
+
+            z-index:3;
+
+            letter-spacing:2px;
+
+            text-shadow:
+                0 2px 6px rgba(0,0,0,0.2);
+        }
+
+
+        /* =====================================================
+           КНОПКИ ОТВЕТОВ
+           ===================================================== */
+
+        .buttons-row{
+            display:flex;
+
+            flex-direction:row;
+
+            justify-content:center;
+
+            width:100%;
+
+            gap:10px;
+
+            padding-bottom:10px;
+        }
+
+
+        button{
+            padding:22px 0;
+
+            font-size:19px;
+
+            font-weight:800;
+
+            color:#1e293b;
+
+            cursor:pointer;
+
+            border:1px solid #cbd5e1;
+
+            border-radius:12px;
+
+            background:
+                linear-gradient(
+                    180deg,
+                    #ffffff 60%,
+                    #f1f5f9 100%
+                );
+
+            box-shadow:
+                0 8px 0 #cbd5e1,
+                0 12px 16px rgba(148,163,184,0.4),
+                inset 0 -2px 0 #ffffff;
+
+            transition:
+                all 0.05s ease;
+
+            outline:none;
+
+            flex:1;
+
+            text-align:center;
+
+            -webkit-tap-highlight-color:transparent;
+
+            position:relative;
+        }
+
+
+        button:hover:not(:disabled){
+            background:
+                linear-gradient(
+                    180deg,
+                    #ffffff 40%,
+                    #e2e8f0 100%
+                );
+
+            color:#0284c7;
+        }
+
+
+        button:active:not(:disabled){
+            transform:translateY(6px);
+
+            box-shadow:
+                0 2px 0 #cbd5e1,
+                0 4px 6px rgba(148,163,184,0.2),
+                inset 0 2px 4px rgba(0,0,0,0.05);
+
+            background:#e2e8f0;
+        }
+
+
+        /* =====================================================
+           ПРАВИЛЬНЫЙ ОТВЕТ
+           ===================================================== */
+
+        .status-correct{
+            transform:scale(1.03);
+
+            box-shadow:
+                0 0 35px rgba(34,197,94,0.5);
+        }
+
+
+        .status-correct .card-content{
+            background:
+                linear-gradient(
+                    135deg,
+                    #22c55e 0%,
+                    #15803d 100%
+                );
+        }
+
+
+        .status-correct .note-image{
+            opacity:0;
+        }
+
+
+        .status-correct .status-text{
+            display:block;
+        }
+
+
+        .status-correct .progress-wave{
+            stroke:#22c55e;
+        }
+
+
+        /* =====================================================
+           НЕПРАВИЛЬНЫЙ ОТВЕТ
+           ===================================================== */
+
+        .status-wrong{
+            animation:
+                musicShake 0.4s ease-in-out;
+
+            box-shadow:
+                0 0 35px rgba(239,68,68,0.5);
+        }
+
+
+        .status-wrong .progress-wave{
+            stroke:#ef4444;
+        }
+
+
+        @keyframes musicShake{
+
+            0%,100%{
+                transform:translateX(0);
+            }
+
+            20%,60%{
+                transform:translateX(-6px);
+            }
+
+            40%,80%{
+                transform:translateX(6px);
+            }
+
+        }
+
+
+        /* =====================================================
+           МОБИЛЬНАЯ АДАПТАЦИЯ
+           ===================================================== */
+
+        @media (max-width:700px){
+
+            .hearing-mode-btn{
+                top:12px;
+                right:12px;
+
+                font-size:11px;
+
+                padding:9px 13px;
+            }
+
+        }
+
+    </style>
+</head>
+
+
+<body>
+
+
+<!-- =========================================================
+     КНОПКА РЕЖИМА СЛУХА
+     ========================================================= -->
+
+<button
+    id="hearingModeBtn"
+    class="hearing-mode-btn"
+    onclick="toggleHearingMode()"
+>
+    🎧 Режим слуха
+</button>
+
+
+<div class="quiz-container">
+
+
+    <!-- =====================================================
+         ПАНЕЛЬ УПРАВЛЕНИЯ
+         ===================================================== -->
+
+    <div class="controls-panel">
+
+
+        <div class="segmented-control">
+
+            <label>
+
+                <input
+                    type="radio"
+                    name="mode"
+                    value="1"
+                    checked
+                    onchange="generateQuestion()"
+                >
+
+                1-я октава
+
+            </label>
+
+
+            <label>
+
+                <input
+                    type="radio"
+                    name="mode"
+                    value="2"
+                    onchange="generateQuestion()"
+                >
+
+                2-я октава
+
+            </label>
+
+
+            <label>
+
+                <input
+                    type="radio"
+                    name="mode"
+                    value="both"
+                    onchange="generateQuestion()"
+                >
+
+                Смешанный диапазон
+
+            </label>
+
+        </div>
+
+
+        <div class="settings-row">
+
+            <span>
+                Интервал таймера (сек):
+            </span>
+
+            <input
+                type="number"
+                id="speedInput"
+                value="10"
+                min="1"
+                max="60"
+                step="0.5"
+            >
+
+        </div>
+
+
+    </div>
+
+
+    <!-- =====================================================
+         КАРТОЧКА
+         ===================================================== -->
+
+    <div
+        id="cardContainer"
+        class="card-container"
+    >
+
+
+        <svg
+            class="timer-svg"
+            viewBox="0 0 217 192"
+        >
+
+            <rect
+                class="bg-track"
+                x="2"
+                y="2"
+                width="213"
+                height="188"
+            ></rect>
+
+
+            <rect
+                class="progress-wave"
+                id="wave"
+                x="2"
+                y="2"
+                width="213"
+                height="188"
+            ></rect>
+
+        </svg>
+
+
+        <div class="card-content">
+
+
+            <div
+                id="statusLabel"
+                class="status-text"
+            >
+                ВЕРНО
+            </div>
+
+
+            <img
+                id="noteImg"
+                class="note-image"
+                src=""
+                alt="Нота"
+            >
+
+
+        </div>
+
+
+    </div>
+
+
+    <!-- =====================================================
+         КНОПКИ НОТ
+         ===================================================== -->
+
+    <div
+        id="buttons"
+        class="buttons-row"
+    ></div>
+
+
+</div>
+
+
+<script>
+
+
+/* =========================================================
+   БАЗА НОТ
+   ========================================================= */
+
+const NOTE_DATABASE = [
+
+
+    /* =====================================================
+       1-Я ОКТАВА
+       ===================================================== */
+
+    {
+        src:"первая октава/до.jpg",
+        answer:"до",
+        octave:"1",
+        freq:261.63
+    },
+
+    {
+        src:"первая октава/ре.jpg",
+        answer:"ре",
+        octave:"1",
+        freq:293.66
+    },
+
+    {
+        src:"первая октава/ми.jpg",
+        answer:"ми",
+        octave:"1",
+        freq:329.63
+    },
+
+    {
+        src:"первая октава/фа.jpg",
+        answer:"фа",
+        octave:"1",
+        freq:349.23
+    },
+
+    {
+        src:"первая октава/соль.jpg",
+        answer:"соль",
+        octave:"1",
+        freq:392.00
+    },
+
+    {
+        src:"первая октава/ля.jpg",
+        answer:"ля",
+        octave:"1",
+        freq:440.00
+    },
+
+    {
+        src:"первая октава/си.jpg",
+        answer:"си",
+        octave:"1",
+        freq:493.88
+    },
+
+
+    /* =====================================================
+       2-Я ОКТАВА
+       ===================================================== */
+
+    {
+        src:"вторая октава/до2.jpg",
+        answer:"до",
+        octave:"2",
+        freq:523.26
+    },
+
+    {
+        src:"вторая октава/ре2.jpg",
+        answer:"ре",
+        octave:"2",
+        freq:587.32
+    },
+
+    {
+        src:"вторая октава/ми2.jpg",
+        answer:"ми",
+        octave:"2",
+        freq:659.26
+    },
+
+    {
+        src:"вторая октава/фа2.jpg",
+        answer:"фа",
+        octave:"2",
+        freq:698.46
+    },
+
+    {
+        src:"вторая октава/соль2.jpg",
+        answer:"соль",
+        octave:"2",
+        freq:784.00
+    },
+
+    {
+        src:"вторая октава/ля2.jpg",
+        answer:"ля",
+        octave:"2",
+        freq:880.00
+    },
+
+    {
+        src:"вторая октава/си2.jpg",
+        answer:"си",
+        octave:"2",
+        freq:987.76
+    }
+
+];
+
+
+/* =========================================================
+   КНОПКИ ОТВЕТОВ
+   ========================================================= */
+
+const KEYBOARD_LAYOUT = [
+    "до",
+    "ре",
+    "ми",
+    "фа",
+    "соль",
+    "ля",
+    "си"
+];
+
+
+/* =========================================================
+   СОСТОЯНИЕ
+   ========================================================= */
+
+let correctAnswer = "";
+
+let lockButtons = false;
+
+let startTime = 0;
+
+let animationFrameId = null;
+
+
+/*
+   Главное состояние нового режима.
+*/
+
+let hearingMode = false;
+
+
+const MAX_OFFSET = 774;
+
+
+/* =========================================================
+   AUDIO
+   ========================================================= */
+
+let audioCtx = null;
+
+let currentOscillators = [];
+
+
+function initAudio(){
+
+    if(!audioCtx){
+
+        audioCtx = new(
+            window.AudioContext ||
+            window.webkitAudioContext
+        )();
+
+    }
+
+
+    if(audioCtx.state === "suspended"){
+
+        audioCtx.resume();
+
+    }
+
+}
+
+
+/*
+   Воспроизведение ноты.
+
+   Используется тот же звуковой движок,
+   что и в программе "на слух.html".
+*/
+
+function playNote(
+    freq,
+    duration = 2.0
+){
+
+    initAudio();
+
+
+    /*
+       Останавливаем предыдущую ноту,
+       чтобы звуки не наслаивались.
+    */
+
+    currentOscillators.forEach(
+        osc => {
+
+            try{
+                osc.stop();
+            }
+            catch(e){}
+
+        }
+    );
+
+
+    currentOscillators = [];
+
+
+    const now =
+        audioCtx.currentTime;
+
+
+    const mainGain =
+        audioCtx.createGain();
+
+
+    const filter =
+        audioCtx.createBiquadFilter();
+
+
+    mainGain.gain.setValueAtTime(
+        0.25,
+        now
+    );
+
+
+    filter.type =
+        "lowpass";
+
+
+    filter.frequency.setValueAtTime(
+        1000,
+        now
+    );
+
+
+    filter.frequency.exponentialRampToValueAtTime(
+        300,
+        now + duration
+    );
+
+
+    /*
+       Гармоники из "на слух.html"
+    */
+
+    const gains = [
+        0.5,
+        0.2,
+        0.1,
+        0.05
+    ];
+
+
+    for(
+        let i = 0;
+        i < 4;
+        i++
+    ){
+
+        const osc =
+            audioCtx.createOscillator();
+
+
+        const gNode =
+            audioCtx.createGain();
+
+
+        osc.type =
+            i % 2 === 0
+            ? "sine"
+            : "triangle";
+
+
+        osc.frequency.setValueAtTime(
+            freq * (i + 1),
+            now
+        );
+
+
+        gNode.gain.setValueAtTime(
+            gains[i],
+            now
+        );
+
+
+        osc.connect(gNode);
+
+        gNode.connect(mainGain);
+
+
+        osc.start(now);
+
+        osc.stop(
+            now + duration
+        );
+
+
+        currentOscillators.push(
+            osc
+        );
+
+    }
+
+
+    mainGain.connect(filter);
+
+    filter.connect(
+        audioCtx.destination
+    );
+
+
+    /*
+       Плавное затухание.
+    */
+
+    mainGain.gain.setValueAtTime(
+        0.25,
+        now + duration - 0.2
+    );
+
+
+    mainGain.gain.exponentialRampToValueAtTime(
+        0.001,
+        now + duration
+    );
+
+}
+
+
+/* =========================================================
+   ПОЛУЧЕНИЕ ЭЛЕМЕНТОВ
+   ========================================================= */
+
+const cardContainer =
+    document.getElementById(
+        "cardContainer"
+    );
+
+
+const noteImgElement =
+    document.getElementById(
+        "noteImg"
+    );
+
+
+const waveElement =
+    document.getElementById(
+        "wave"
+    );
+
+
+const buttonsContainer =
+    document.getElementById(
+        "buttons"
+    );
+
+
+const speedInputElement =
+    document.getElementById(
+        "speedInput"
+    );
+
+
+const hearingModeBtn =
+    document.getElementById(
+        "hearingModeBtn"
+    );
+
+
+/* =========================================================
+   СОЗДАНИЕ КНОПОК НОТ
+   ========================================================= */
+
+function initKeyboard(){
+
+    buttonsContainer.innerHTML = "";
+
+
+    KEYBOARD_LAYOUT.forEach(
+        noteName => {
+
+
+            const btn =
+                document.createElement(
+                    "button"
+                );
+
+
+            btn.innerText =
+                noteName;
+
+
+            btn.onclick =
+                () => checkAnswer(
+                    noteName
+                );
+
+
+            buttonsContainer.appendChild(
+                btn
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   ТАЙМЕР
+   ========================================================= */
+
+function getTimeLimit(){
+
+    const val =
+        parseFloat(
+            speedInputElement.value
+        );
+
+
+    return (
+        isNaN(val) ||
+        val <= 0
+    )
+    ? 5000
+    : val * 1000;
+
+}
+
+
+function runTimer(timestamp){
+
+    if(!startTime){
+
+        startTime =
+            timestamp;
+
+    }
+
+
+    const elapsed =
+        timestamp - startTime;
+
+
+    const currentLimit =
+        getTimeLimit();
+
+
+    if(
+        elapsed >= currentLimit
+    ){
+
+        waveElement.style.strokeDashoffset =
+            MAX_OFFSET;
+
+
+        generateQuestion();
+
+    }
+    else{
+
+        waveElement.style.strokeDashoffset =
+            (
+                elapsed /
+                currentLimit
+            ) * MAX_OFFSET;
+
+
+        if(!lockButtons){
+
+            animationFrameId =
+                requestAnimationFrame(
+                    runTimer
+                );
+
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   ПЕРЕКЛЮЧЕНИЕ РЕЖИМА СЛУХА
+   ========================================================= */
+
+function toggleHearingMode(){
+
+    /*
+       Меняем состояние.
+    */
+
+    hearingMode =
+        !hearingMode;
+
+
+    /*
+       Меняем внешний вид кнопки.
+    */
+
+    if(hearingMode){
+
+        hearingModeBtn.classList.add(
+            "active"
+        );
+
+        hearingModeBtn.innerText =
+            "🎧 Режим слуха: ВКЛ";
+
+    }
+    else{
+
+        hearingModeBtn.classList.remove(
+            "active"
+        );
+
+        hearingModeBtn.innerText =
+            "🎧 Режим слуха";
+
+    }
+
+
+    /*
+       После переключения режима
+       начинаем новый вопрос.
+
+       Это важно:
+       пользователь не должен увидеть
+       предыдущую ноту перед включением
+       режима слуха.
+    */
+
+    generateQuestion();
+
+}
+
+
+/* =========================================================
+   ГЕНЕРАЦИЯ ВОПРОСА
+   ========================================================= */
+
+function generateQuestion(){
+
+    /*
+       Останавливаем старый таймер.
+    */
+
+    if(animationFrameId){
+
+        cancelAnimationFrame(
+            animationFrameId
+        );
+
+    }
+
+
+    lockButtons =
+        false;
+
+
+    startTime =
+        0;
+
+
+    /*
+       Сбрасываем состояние карточки.
+    */
+
+    cardContainer.className =
+        "card-container";
+
+
+    /*
+       Если включён режим слуха,
+       добавляем класс обратно.
+    */
+
+    if(hearingMode){
+
+        cardContainer.classList.add(
+            "hearing-mode"
+        );
+
+    }
+
+
+    waveElement.style.strokeDashoffset =
+        "0";
+
+
+    /*
+       Определяем выбранный диапазон.
+    */
+
+    const selectedMode =
+        document.querySelector(
+            'input[name="mode"]:checked'
+        ).value;
+
+
+    const filteredDB =
+        selectedMode === "both"
+        ? NOTE_DATABASE
+        : NOTE_DATABASE.filter(
+            item =>
+                item.octave === selectedMode
+        );
+
+
+    /*
+       Выбираем случайную ноту.
+    */
+
+    const randomItem =
+        filteredDB[
+            Math.floor(
+                Math.random() *
+                filteredDB.length
+            )
+        ];
+
+
+    /*
+       Загружаем картинку.
+
+       В обычном режиме она видна.
+
+       В режиме слуха она технически загружена,
+       но CSS полностью её скрывает.
+    */
+
+    noteImgElement.src =
+        randomItem.src;
+
+
+    /*
+       Запоминаем правильный ответ.
+    */
+
+    correctAnswer =
+        randomItem.answer;
+
+
+    /*
+       Самое главное:
+       звук всегда воспроизводится,
+       независимо от режима.
+    */
+
+    playNote(
+        randomItem.freq,
+        2.0
+    );
+
+
+    /*
+       Запускаем таймер.
+    */
+
+    animationFrameId =
+        requestAnimationFrame(
+            runTimer
+        );
+
+}
+
+
+/* =========================================================
+   ПРОВЕРКА ОТВЕТА
+   ========================================================= */
+
+function checkAnswer(
+    selectedValue
+){
+
+    if(lockButtons){
+
+        return;
+
+    }
+
+
+    /*
+       ПРАВИЛЬНО
+    */
+
+    if(
+        selectedValue ===
+        correctAnswer
+    ){
+
+        lockButtons =
+            true;
+
+
+        cancelAnimationFrame(
+            animationFrameId
+        );
+
+
+        cardContainer.classList.add(
+            "status-correct"
+        );
+
+
+        /*
+           Через секунду
+           появляется следующий вопрос.
+        */
+
+        setTimeout(
+            generateQuestion,
+            1000
+        );
+
+    }
+
+
+    /*
+       НЕПРАВИЛЬНО
+    */
+
+    else{
+
+        cardContainer.classList.add(
+            "status-wrong"
+        );
+
+
+        setTimeout(
+            () => {
+
+                if(!lockButtons){
+
+                    cardContainer.classList.remove(
+                        "status-wrong"
+                    );
+
+                }
+
+            },
+            400
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   ПЕРВИЧНАЯ ИНИЦИАЛИЗАЦИЯ
+   ========================================================= */
+
+initKeyboard();
+
+generateQuestion();
+
+
+/* =========================================================
+   РАЗРЕШЕНИЕ AUDIOCONTEXT ПОСЛЕ ВЗАИМОДЕЙСТВИЯ
+   ========================================================= */
+
+document.addEventListener(
+    "pointerdown",
+    () => {
+
+        if(audioCtx){
+
+            if(
+                audioCtx.state ===
+                "suspended"
+            ){
+
+                audioCtx.resume();
+
+            }
+
+        }
+
+    },
+    {
+        once:false
+    }
+);
+
+</script>
+
+</body>
+</html>
